@@ -50,7 +50,7 @@ class DataDrivenInputMask(object):
             self.app.ddManager = ddManager
         # initialize locale
         localePath = ""
-        locale = QtCore.QSettings().value("locale/userLocale")[0:2]
+        locale = QgsSettings().value("locale/userLocale")[0:2]
 
         libPath = os.path.dirname(__file__)
         libPathFound = False

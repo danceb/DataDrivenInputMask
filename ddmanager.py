@@ -56,7 +56,7 @@ class DdManager(object):
     def __init__(self,  iface):
         self.iface = iface
         self.ddLayers = dict()
-        settings = QtCore.QSettings()
+        settings = QgsSettings()
         settings.beginGroup("Qgis/digitizing")
         a = settings.value("line_color_alpha",200,type=int)
         b = settings.value("line_color_blue",0,type=int)
@@ -77,13 +77,13 @@ class DdManager(object):
         return "<ddmanager.DdManager>"
 
     def saveSearchPath(self,  path = ""):
-        settings = QtCore.QSettings()
+        settings = QgsSettings()
         settings.beginGroup("DataDrivenInputMask")
         settings.setValue(u"lastSearchPath", path)
         settings.endGroup()
 
     def getSearchPath(self):
-        settings = QtCore.QSettings()
+        settings = QgsSettings()
         settings.beginGroup("DataDrivenInputMask")
         path = settings.value("lastSearchPath",  "",  type=str)
         settings.endGroup()
