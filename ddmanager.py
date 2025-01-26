@@ -845,22 +845,36 @@ class DdManager(object):
         if thisPort == -1:
             thisPort = 5432
 
-        # set host name, port, database name, username and password
+        # set service name or host name, port as well as database name, username and password
         authcfg = None #ini'
 
-        if hasattr(db, "authcfg"):
-            authcfg = db.authcfg
+        serviceName = db.connectOptions().split("service=")[1]
 
-            if authcfg != None:
+        if serviceName != None:
+            if hasattr(db, "authcfg"):
+                authcfg = db.authcfg
+
+                if authcfg != None:
+                    uri.setConnection(serviceName, db.databaseName(), None, None, sslmode = sslMode, authConfigId = authcfg)
+
+            if authcfg == None:
+                uri.setConnection(serviceName, db.databaseName(), db.userName(), db.password(), sslmode = sslMode, authConfigId = '')
+
+        if serviceName == None:
+            if hasattr(db, "authcfg"):
+                authcfg = db.authcfg
+
+                if authcfg != None:
+                    uri.setConnection(db.hostName(), str(thisPort), db.databaseName(),
+                        None, None, sslmode = sslMode, authConfigId = authcfg)
+
+            if authcfg == None:
                 uri.setConnection(db.hostName(), str(thisPort), db.databaseName(),
-                    None, None, sslmode = sslMode, authConfigId = authcfg)
+                    db.userName(), db.password(), sslmode = sslMode)
 
-        if authcfg == None:
-            uri.setConnection(db.hostName(), str(thisPort), db.databaseName(),
-                db.userName(), db.password(), sslmode = sslMode)
-
-        # set database schema, table name, geometry column and optionaly subset (WHERE clause)
+        # set database schema, table name, geometry column and optionaly subset (WHERE clause) and key column
         uri.setDataSource(ddTable.schemaName, ddTable.tableName, geomColumn)
+
         if whereClause:
             uri.setSql(whereClause)
 
@@ -1062,17 +1076,18 @@ class DdManager(object):
         else:
             return db
 
-    def __connectServiceDb(self,  qSqlDatabaseName,  service,  username,  passwd):
+    def __connectServiceDb(self,  qSqlDatabaseName,  service,  username,  passwd, authcfg = None):
         '''connect to the PostgreSQL DB via pg_service'''
         db = QtSql.QSqlDatabase.addDatabase ("QPSQL",  qSqlDatabaseName)
-        db.setConnectOptions("service=" + service)
+        db.setConnectOptions(f"service={service}")
         db.setUserName(username)
         db.setPassword(passwd)
+        db.authcfg = authcfg
         ok = db.open()
 
         if not ok:
-            DdError(QtWidgets.QApplication.translate("DdError", "Could not connect to PostgreSQL database: ") +
-            database,  iface = self.iface)
+            DdError(QtWidgets.QApplication.translate("DdError", "Could not connect to PostgreSQL service: ") +
+            service,  iface = self.iface)
             return None
         else:
             return db
@@ -1133,7 +1148,7 @@ class DdManager(object):
             sslmode = None
 
         if host == None:
-            db = self.__connectServiceDb(layer.id(),  service, user, password)
+            db = self.__connectServiceDb(layer.id(), service, user, password, authcfg)
         else:
             db = self.__connectDb(layer.id(), host, dbname,
                 int(layerSrc["port"]), user,

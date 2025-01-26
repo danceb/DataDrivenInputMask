@@ -92,7 +92,7 @@ def ddFormInit(dialog, layerId, featureId):
                 result = dlg.exec_()
 
                 if result == 1:
-                    layer.setModified()
+                    aLayer.setModified()
 
 class DdEventFilter(QtCore.QObject):
     '''Event filter class to be applied to DdLineEdit's input widgets
